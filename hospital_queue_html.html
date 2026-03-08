@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Patient Queue System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-top: 10px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            margin-top: 10px;
+        }
+
+        .patient-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .patient-card:hover {
+            transform: translateX(5px);
+        }
+
+        .patient-card.critical {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .patient-card.urgent {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .patient-card.normal {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .patient-card h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+        }
+
+        .patient-card p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .priority-badge.critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .priority-badge.urgent {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .priority-badge.normal {
+            background: #28a745;
+            color: white;
+        }
+
+        .queue-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .queue-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .queue-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .queue-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        .search-box button {
+            width: auto;
+            padding: 12px 25px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Hospital Patient Queue System</h1>
+            <p>Efficient Patient Management using Data Structures & Algorithms</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Admit Patient Section -->
+            <div class="section">
+                <h2>👤 Admit New Patient</h2>
+                <div id="admitMessage" class="message"></div>
+                <form id="admitForm">
+                    <div class="form-group">
+                        <label for="patientName">Patient Name *</label>
+                        <input type="text" id="patientName" required placeholder="Enter full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="patientAge">Age *</label>
+                        <input type="number" id="patientAge" min="1" max="120" required placeholder="Enter age">
+                    </div>
+                    <div class="form-group">
+                        <label for="patientCondition">Medical Condition *</label>
+                        <textarea id="patientCondition" rows="3" required placeholder="Describe the condition"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientPriority">Priority Level *</label>
+                        <select id="patientPriority" required>
+                            <option value="">Select Priority</option>
+                            <option value="1">Critical - Immediate attention</option>
+                            <option value="2">Urgent - Needs quick care</option>
+                            <option value="3">Normal - Routine care</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Admit Patient</button>
+                </form>
+            </div>
+
+            <!-- Patient Queues Section -->
+            <div class="section">
+                <h2>📋 Patient Queues</h2>
+                <div id="queueMessage" class="message"></div>
+                
+                <h3 style="color: #dc3545; margin-bottom: 15px;">🚨 Emergency Queue (Priority)</h3>
+                <div class="queue-container" id="emergencyQueue">
+                    <div class="empty-state">
+                        <span>📭</span>
+                        <p>No emergency patients</p>
+                    </div>
+                </div>
+
+                <h3 style="color: #28a745; margin: 20px 0 15px;">📝 Normal Queue (FIFO)</h3>
+                <div class="queue-container" id="normalQueue">
+                    <div class="empty-state">
+                        <span>📭</span>
+                        <p>No patients in normal queue</p>
+                    </div>
+                </div>
+
+                <button onclick="treatNext()" class="btn btn-secondary">Treat Next Patient</button>
+            </div>
+
+            <!-- Treated Patients Section -->
+            <div class="section">
+                <h2>✅ Treated Patients</h2>
+                <div class="search-box">
+                    <input type="number" id="searchId" placeholder="Search by Patient ID">
+                    <button onclick="searchPatient()" class="btn">Search</button>
+                </div>
+                <div id="searchResult" class="message"></div>
+                
+                <div class="queue-container" id="treatedQueue">
+                    <div class="empty-state">
+                        <span>👨‍⚕️</span>
+                        <p>No patients treated yet</p>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="sortPatients()" class="btn btn-success">Sort by ID</button>
+                    <button onclick="exportData()" class="btn btn-success">Export Data</button>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="section">
+                <h2>📊 System Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="emergencyCount">0</h3>
+                        <p>Emergency Queue</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="normalCount">0</h3>
+                        <p>Normal Queue</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalWaiting">0</h3>
+                        <p>Total Waiting</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="treatedCount">0</h3>
+                        <p>Patients Treated</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; padding: 20px; background: white; border-radius: 10px;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📚 Data Structures Used:</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>1. Priority Queue (Min-Heap)</strong> - Emergency patients
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>2. Regular Queue (FIFO)</strong> - Normal patients
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>3. Dynamic Array (Vector)</strong> - Treated patients
+                        </li>
+                    </ul>
+
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">🔍 Algorithms Used:</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>1. Bubble Sort</strong> - Sort treated patients by ID
+                        </li>
+                        <li style="padding: 8px 0;">
+                            <strong>2. Binary Search</strong> - Find patient by ID
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data structures simulation in JavaScript
+        class Patient {
+            constructor(id, name, age, condition, priority) {
+                this.id = id;
+                this.name = name;
+                this.age = age;
+                this.condition = condition;
+                this.priority = priority;
+                this.arrivalTime = new Date().toLocaleTimeString();
+                this.treated = false;
+            }
+        }
+
+        // Priority Queue using Min-Heap
+        class PriorityQueue {
+            constructor() {
+                this.heap = [];
+            }
+
+            push(patient) {
+                this.heap.push(patient);
+                this.bubbleUp(this.heap.length - 1);
+            }
+
+            pop() {
+                if (this.heap.length === 0) return null;
+                const min = this.heap[0];
+                const last = this.heap.pop();
+                if (this.heap.length > 0) {
+                    this.heap[0] = last;
+                    this.bubbleDown(0);
+                }
+                return min;
+            }
+
+            bubbleUp(index) {
+                while (index > 0) {
+                    const parentIndex = Math.floor((index - 1) / 2);
+                    if (this.heap[index].priority >= this.heap[parentIndex].priority) break;
+                    [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+                    index = parentIndex;
+                }
+            }
+
+            bubbleDown(index) {
+                while (true) {
+                    let minIndex = index;
+                    const leftChild = 2 * index + 1;
+                    const rightChild = 2 * index + 2;
+
+                    if (leftChild < this.heap.length && this.heap[leftChild].priority < this.heap[minIndex].priority) {
+                        minIndex = leftChild;
+                    }
+                    if (rightChild < this.heap.length && this.heap[rightChild].priority < this.heap[minIndex].priority) {
+                        minIndex = rightChild;
+                    }
+                    if (minIndex === index) break;
+
+                    [this.heap[index], this.heap[minIndex]] = [this.heap[minIndex], this.heap[index]];
+                    index = minIndex;
+                }
+            }
+
+            isEmpty() {
+                return this.heap.length === 0;
+            }
+
+            toArray() {
+                return [...this.heap];
+            }
+        }
+
+        // System state
+        let emergencyQueue = new PriorityQueue();
+        let normalQueue = [];
+        let treatedPatients = [];
+        let patientCounter = 1000;
+
+        // Initialize with demo data
+        function initializeDemoData() {
+            admitPatient('John Doe', 45, 'Chest Pain', 1);
+            admitPatient('Jane Smith', 32, 'Flu Symptoms', 3);
+            admitPatient('Robert Brown', 67, 'Severe Bleeding', 1);
+            admitPatient('Emily Davis', 28, 'Minor Cut', 3);
+            admitPatient('Michael Wilson', 55, 'Difficulty Breathing', 2);
+        }
+
+        // Form submission
+        document.getElementById('admitForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('patientName').value;
+            const age = parseInt(document.getElementById('patientAge').value);
+            const condition = document.getElementById('patientCondition').value;
+            const priority = parseInt(document.getElementById('patientPriority').value);
+
+            admitPatient(name, age, condition, priority);
+            this.reset();
+        });
+
+        function admitPatient(name, age, condition, priority) {
+            const patient = new Patient(++patientCounter, name, age, condition, priority);
+
+            if (priority === 1 || priority === 2) {
+                emergencyQueue.push(patient);
+                showMessage('admitMessage', `Patient ${name} admitted to Emergency Queue`, 'success');
+            } else {
+                normalQueue.push(patient);
+                showMessage('admitMessage', `Patient ${name} admitted to Normal Queue`, 'success');
+            }
+
+            updateDisplay();
+        }
+
+        function treatNext() {
+            let patient = null;
+
+            if (!emergencyQueue.isEmpty()) {
+                patient = emergencyQueue.pop();
+            } else if (normalQueue.length > 0) {
+                patient = normalQueue.shift();
+            }
+
+            if (patient) {
+                patient.treated = true;
+                treatedPatients.push(patient);
+                showMessage('queueMessage', `Treating patient: ${patient.name} (ID: ${patient.id})`, 'success');
+                updateDisplay();
+            } else {
+                showMessage('queueMessage', 'No patients in queue!', 'error');
+            }
+        }
+
+        function updateDisplay() {
+            displayEmergencyQueue();
+            displayNormalQueue();
+            displayTreatedPatients();
+            updateStatistics();
+        }
+
+        function displayEmergencyQueue() {
+            const container = document.getElementById('emergencyQueue');
+            const patients = emergencyQueue.toArray();
+
+            if (patients.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No emergency patients</p></div>';
+                return;
+            }
+
+            container.innerHTML = patients.map(p => createPatientCard(p)).join('');
+        }
+
+        function displayNormalQueue() {
+            const container = document.getElementById('normalQueue');
+
+            if (normalQueue.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No patients in normal queue</p></div>';
+                return;
+            }
+
+            container.innerHTML = normalQueue.map(p => createPatientCard(p)).join('');
+        }
+
+        function displayTreatedPatients() {
+            const container = document.getElementById('treatedQueue');
+
+            if (treatedPatients.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>👨‍⚕️</span><p>No patients treated yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = treatedPatients.map(p => createPatientCard(p)).join('');
+        }
+
+        function createPatientCard(patient) {
+            const priorityClass = patient.priority === 1 ? 'critical' : patient.priority === 2 ? 'urgent' : 'normal';
+            const priorityText = patient.priority === 1 ? 'Critical' : patient.priority === 2 ? 'Urgent' : 'Normal';
+
+            return `
+                <div class="patient-card ${priorityClass}">
+                    <h3>${patient.name}</h3>
+                    <p><strong>ID:</strong> ${patient.id}</p>
+                    <p><strong>Age:</strong> ${patient.age}</p>
+                    <p><strong>Condition:</strong> ${patient.condition}</p>
+                    <p><strong>Arrival:</strong> ${patient.arrivalTime}</p>
+                    <span class="priority-badge ${priorityClass}">${priorityText}</span>
+                </div>
+            `;
+        }
+
+        function updateStatistics() {
+            document.getElementById('emergencyCount').textContent = emergencyQueue.toArray().length;
+            document.getElementById('normalCount').textContent = normalQueue.length;
+            document.getElementById('totalWaiting').textContent = emergencyQueue.toArray().length + normalQueue.length;
+            document.getElementById('treatedCount').textContent = treatedPatients.length;
+        }
+
+        // Algorithm: Bubble Sort
+        function sortPatients() {
+            const n = treatedPatients.length;
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    if (treatedPatients[j].id > treatedPatients[j + 1].id) {
+                        [treatedPatients[j], treatedPatients[j + 1]] = [treatedPatients[j + 1], treatedPatients[j]];
+                    }
+                }
+            }
+            displayTreatedPatients();
+            showMessage('searchResult', 'Patients sorted by ID using Bubble Sort', 'success');
+        }
+
+        // Algorithm: Binary Search
+        function searchPatient() {
+            const id = parseInt(document.getElementById('searchId').value);
+            if (!id) {
+                showMessage('searchResult', 'Please enter a patient ID', 'error');
+                return;
+            }
+
+            // First sort the array
+            treatedPatients.sort((a, b) => a.id - b.id);
+
+            let left = 0, right = treatedPatients.length - 1;
+            let found = false;
+
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2);
+
+                if (treatedPatients[mid].id === id) {
+                    showMessage('searchResult', 
+                        `Patient found: ${treatedPatients[mid].name} (Position: ${mid + 1}) using Binary Search`, 
+                        'success');
+                    found = true;
+                    break;
+                }
+
+                if (treatedPatients[mid].id < id) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+
+            if (!found) {
+                showMessage('searchResult', 'Patient not found in treated records', 'error');
+            }
+        }
+
+        function exportData() {
+            let report = 'HOSPITAL PATIENT QUEUE SYSTEM - REPORT\n';
+            report += '========================================\n\n';
+            report += 'WAITING PATIENTS:\n-----------------\n';
+
+            emergencyQueue.toArray().forEach(p => {
+                report += `ID: ${p.id} | ${p.name} | Priority: ${p.priority === 1 ? 'Critical' : 'Urgent'} | ${p.condition}\n`;
+            });
+
+            normalQueue.forEach(p => {
+                report += `ID: ${p.id} | ${p.name} | Priority: Normal | ${p.condition}\n`;
+            });
+
+            report += '\nTREATED PATIENTS:\n-----------------\n';
+            treatedPatients.forEach(p => {
+                report += `ID: ${p.id} | ${p.name} | ${p.condition} | Arrival: ${p.arrivalTime}\n`;
+            });
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hospital_report.txt';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `message ${type} show`;
+            setTimeout(() => {
+                element.classList.remove('show');
+            }, 5000);
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initializeDemoData();
+            updateDisplay();
+        };
+    </script>
+</body>
+</html>
